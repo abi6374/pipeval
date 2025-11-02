@@ -101,11 +101,13 @@ class Validators:
     @staticmethod
     def phone() -> Callable:
         """Validator: phone number format."""
-        pattern = r'^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$'
+        # Allow common international and local formats: strip non-digit characters
+        # and accept numbers with between 10 and 15 digits (covers country codes).
         def validate(value):
             if not isinstance(value, str):
                 return False, "Phone must be a string"
-            if not re.match(pattern, value.replace(" ", "")):
+            cleaned = re.sub(r"\D", "", value)
+            if len(cleaned) < 10 or len(cleaned) > 15:
                 return False, "Invalid phone format"
             return True, None
         return validate
@@ -117,7 +119,7 @@ class Validators:
             try:
                 num = float(value)
             except (ValueError, TypeError):
-                return False, f"Expected number"
+                return False, "Expected number"
             if num < min_val:
                 return False, f"Value must be >= {min_val}"
             return True, None
@@ -130,7 +132,7 @@ class Validators:
             try:
                 num = float(value)
             except (ValueError, TypeError):
-                return False, f"Expected number"
+                return False, "Expected number"
             if num > max_val:
                 return False, f"Value must be <= {max_val}"
             return True, None

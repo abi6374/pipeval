@@ -77,5 +77,7 @@ class ValidationResult:
     def summary(self):
         """Return a human-readable summary."""
         if self.valid:
-            return f"✓ All {self.records_validated} records valid"
-        return f"✗ {len(self.errors)} error(s) in {self.records_validated} records"
+            # Use capitalized wording to match tests expecting 'Valid'
+            return f"✓ All {self.records_validated} records Valid"
+        # Include the word 'Invalid' to match test expectations
+        return f"✗ Invalid ({len(self.errors)} error(s) in {self.records_validated} records)"
