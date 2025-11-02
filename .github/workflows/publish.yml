@@ -1,0 +1,156 @@
+name: Tests & Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+      
+      - name: Check code style with black
+        run: black --check data_validator tests
+      
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 data_validator tests --max-line-length=100 --extend-ignore=E203,W503
+      
+      - name: Type check with mypy
+        run: |
+          pip install mypy
+          mypy data_validator --ignore-missing-imports || true
+
+  build:
+    name: Build distribution
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Install build tools
+        run: pip install --upgrade build wheel setuptools
+      
+      - name: Build distribution
+        run: python -m build
+      
+      - name: Store distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      
+      - name: Check package with twine
+        run: |
+          pip install twine
+          twine check dist/*
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    # Note: this job will publish only when a tag like vX.Y.Z is pushed.
+    # It uses a PyPI API token stored in the repository secrets as ``PYPI_API_TOKEN``.
+    # Remove the `environment` stanza unless you explicitly want to use a protected
+    # GitHub environment named `pypi` with its own secrets/approval rules.
+    permissions:
+      id-token: write
+    
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      
+      - name: Publish to PyPI
+        # Use twine directly to avoid action input mismatches.
+        # PyPI project-scoped API tokens should be stored in repository Secrets
+        # under the name `PYPI_API_TOKEN`.
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install twine
+          twine upload dist/*
+
+  create-release:
+    name: Create GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: publish-to-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          draft: false
+          prerelease: false
+
+  publish-to-testpypi:
+    name: Publish to Test PyPI
+    needs: build
+    # only run when pushing to main branch (not on tag pushes)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to Test PyPI
+        # Store a Test PyPI token in repository secrets as TEST_PYPI_API_TOKEN
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install twine
+          twine upload --repository-url https://test.pypi.org/legacy/ dist/*

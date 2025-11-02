@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pipeval"
+version = "0.1.0"
+description = "Production-grade data validation library with multi-format support for data pipelines"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "G S Abinivas", email = "abinivas8@gmail.com"}
+]
+keywords = ["data", "validation", "schema", "pipeline", "json", "csv", "parquet"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "black>=23.0", "flake8>=6.0", "mypy>=1.0"]
+parquet = ["pyarrow>=10.0"]
+all = ["pyarrow>=10.0"]
+
+[project.urls]
+Homepage = "https://github.com/abi6374/pipeval"
+Repository = "https://github.com/abi6374/pipeval.git"
+Issues = "https://github.com/abi6374/pipeval/issues"
+Documentation = "https://github.com/abi6374/pipeval#readme"
+
+[tool.setuptools]
+packages = ["pipeval"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

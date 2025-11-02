@@ -1,0 +1,16 @@
+LICENSE
+README.md
+pyproject.toml
+pipeval/__init__.py
+pipeval/core.py
+pipeval/readers.py
+pipeval/types.py
+pipeval/validators.py
+pipeval.egg-info/PKG-INFO
+pipeval.egg-info/SOURCES.txt
+pipeval.egg-info/dependency_links.txt
+pipeval.egg-info/requires.txt
+pipeval.egg-info/top_level.txt
+tests/test_core.py
+tests/test_readers.py
+tests/test_validators.py

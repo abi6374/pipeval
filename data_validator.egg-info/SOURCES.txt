@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+data_validator/__init__.py
+data_validator/core.py
+data_validator/readers.py
+data_validator/types.py
+data_validator/validators.py
+data_validator.egg-info/PKG-INFO
+data_validator.egg-info/SOURCES.txt
+data_validator.egg-info/dependency_links.txt
+data_validator.egg-info/top_level.txt
+tests/test_core.py
+tests/test_readers.py
+tests/test_validators.py
